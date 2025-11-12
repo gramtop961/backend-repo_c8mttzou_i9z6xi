@@ -1,48 +1,46 @@
 """
-Database Schemas
+Database Schemas for the Marketing site
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
+Each Pydantic model corresponds to a MongoDB collection (lowercased class name).
 
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Collections created here:
+- Lead -> "lead": contact/lead submissions
+- Service -> "service": list of services offered (IT and Satcom)
+- CaseStudy -> "casestudy": case studies/portfolio items
+- NewsItem -> "newsitem": recent updates/news highlights
 """
 
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, EmailStr
+from typing import Optional, List, Literal
+from datetime import datetime
 
-# Example schemas (replace with your own):
-
-class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
+class Lead(BaseModel):
     name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+    email: EmailStr = Field(..., description="Email address")
+    phone: Optional[str] = Field(None, description="Phone number")
+    company: Optional[str] = Field(None, description="Company name")
+    service_interest: Optional[str] = Field(None, description="Interested service or category")
+    message: Optional[str] = Field(None, description="Message from the lead")
+    source: Optional[str] = Field("website", description="Where this lead originated")
 
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+class Service(BaseModel):
+    title: str = Field(..., description="Service title")
+    category: Literal["IT", "Satcom"] = Field(..., description="Service category")
+    description: str = Field(..., description="Short description")
+    features: List[str] = Field(default_factory=list, description="Key features/bullets")
+    icon: Optional[str] = Field(None, description="Icon name for UI (lucide icon key)")
 
-# Add your own schemas here:
-# --------------------------------------------------
+class CaseStudy(BaseModel):
+    title: str = Field(..., description="Case study title")
+    client: str = Field(..., description="Client name")
+    industry: Optional[str] = Field(None, description="Industry/vertical")
+    summary: str = Field(..., description="Short summary of the engagement")
+    results: List[str] = Field(default_factory=list, description="Measurable results/outcomes")
+    tags: List[str] = Field(default_factory=list, description="Tags for filtering")
+    featured_image: Optional[str] = Field(None, description="Hero/cover image URL")
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class NewsItem(BaseModel):
+    title: str = Field(..., description="News title")
+    summary: str = Field(..., description="Short summary")
+    url: Optional[str] = Field(None, description="Link for more details")
+    published_at: datetime = Field(default_factory=datetime.utcnow, description="Publish timestamp")
